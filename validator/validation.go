@@ -39,7 +39,6 @@ func (v Validation) CondRequired(structValue interface{}, key string,  zeValue i
 		ft := typ.Field(i)
 
 		vkey := ft.Tag.Get("vkey")
-		fmt.Printf("vkey:(%s), keyCompare:(%s),ft.Name:(%s)\n", vkey, keyCompare, ft.Name)
 		if (vkey != "" && vkey == keyCompare) || (vkey == "" && ft.Name == keyCompare) {
 			zVal := fmt.Sprintf("%v", reflect.Indirect(fv))
 			if zVal == valueCompare {
@@ -146,24 +145,24 @@ func (v Validation) Email(value interface{}, key, defaultError string) error {
 	if IsEmpty(value) {
 		return nil
 	}
-	return v.Match(value, key, defaultError, v.EmailFormat)
+	return v.Match(value, key, v.EmailFormat, defaultError)
 }
 
 func (v Validation) Phone(value interface{}, key, defaultError string) error {
 	if IsEmpty(value) {
 		return nil
 	}
-	return v.Match(value, key, defaultError, v.PhoneFormat)
+	return v.Match(value, key, v.PhoneFormat, defaultError)
 }
 
 func (v Validation) Date(value interface{}, key, defaultError string) error {
 	if IsEmpty(value) {
 		return nil
 	}
-	return v.Match(value, key, defaultError, v.DateFormat)
+	return v.Match(value, key, v.DateFormat, defaultError)
 }
 
-func (v Validation) Match(value interface{}, key, defaultError, format string) error {
+func (v Validation) Match(value interface{}, key, format, defaultError string) error {
 	re := regexp.MustCompile(format)
 	svalue, found := value.(string)
 

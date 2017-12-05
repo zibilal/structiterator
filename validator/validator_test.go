@@ -17,17 +17,30 @@ type Person struct {
 }
 
 type Application struct {
-	Id uint `vkey:"id" valid:"funcVal:Required"`
-	Name string `vkey:"application_name" valid:"funcVal:Required"`
-	AppliedTime string `vkey:"applied_time" valid:"funcVal:Required"`
+	Id           uint   `vkey:"id" valid:"funcVal:Required"`
+	Name         string `vkey:"application_name" valid:"funcVal:Required"`
+	AppliedTime  string `valid:"funcVal:Required"`
+	ApprovedTime string `valid:"funcVal:Required;funcVal:AfterDate,keyCompare1:ApprovedTime,keyCompare2:AppliedTime"`
+}
+
+type ApplicationSecond struct {
+	Id           uint   `vkey:"id" valid:"funcVal:Required"`
+	Name         string `vkey:"application_name" valid:"funcVal:Required"`
+	AppliedTime  string `vkey:"applied_time" valid:"funcVal:Required"`
 	ApprovedTime string `vkey:"approved_time" valid:"funcVal:Required;funcVal:AfterDate,keyCompare1:approved_time,keyCompare2:applied_time"`
 }
 
 type App2 struct {
-	Id uint `valid:"funcVal:Required"`
-	Name string `valid:"funcVal:Required"`
-	Status string
+	Id             uint   `valid:"funcVal:Required"`
+	Name           string `valid:"funcVal:Required"`
+	Status         string
 	ApprovalReason string `valid:"funcVal:CondRequired,compareKey:Status,compareValue:approved"`
+}
+
+type App3 struct {
+	Id          uint   `valid:"funcVal:Required"`
+	Name        string `valid:"funcVal:Required"`
+	PhoneNumber string `valid:"funcVal:Required;funcVal:Match,format:^(62|0)([0-9]*)$"`
 }
 
 func TestNewValidStruct(t *testing.T) {
@@ -51,8 +64,8 @@ func TestNewValidStruct2(t *testing.T) {
 
 	t.Log("\nTesting unempty struct:")
 	{
-		person := Person {
-			Name: "Bilal Muhammad",
+		person := Person{
+			Name:  "Bilal Muhammad",
 			Email: "Bilal Muhammad",
 		}
 		validtr := NewValidStruct()
@@ -65,6 +78,17 @@ func TestNewValidStruct3(t *testing.T) {
 	t.Log("\nTesting for Application struct")
 	{
 		app := Application{}
+		app.Id = 1
+		app.AppliedTime = "09/20/2017"
+		app.ApprovedTime = "09/19/2017"
+		validtr := NewValidStruct()
+		errors := validtr.Valid(app)
+		t.Log("Errors3", errors)
+	}
+
+	t.Log("\nTesting for ApplicationSecond struct")
+	{
+		app := ApplicationSecond{}
 		app.Id = 1
 		app.AppliedTime = "09/20/2017"
 		app.ApprovedTime = "09/19/2017"
@@ -85,6 +109,17 @@ func TestNewValidStruct4(t *testing.T) {
 		validtr := NewValidStruct()
 		errors := validtr.Valid(app)
 		t.Log("Errors4", errors)
+	}
+	t.Log("\nTesting for App3 struct")
+	{
+		app := App3{}
+		app.Id = 3
+		app.Name = "Bilal Muhammad"
+		app.PhoneNumber = "+6281817800"
+
+		validtr := NewValidStruct()
+		errors := validtr.Valid(app)
+		t.Log("Errors5", errors)
 	}
 }
 

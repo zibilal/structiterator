@@ -69,48 +69,62 @@ func (s *ValidStruct) Valid(input interface{}) []error {
 									}
 								} else if val.IsValid() && val.Type().String() == "func(interface {}, string, string, string) error" {
 									k1, k2 := "", ""
+									var theValue reflect.Value
 									if dtag.compareKey != "" && dtag.compareValue != "" {
 										k1, k2 = dtag.compareKey, dtag.compareValue
-									} else {
+										theValue = v
+									} else if dtag.keyCompare1 != "" && dtag.keyCompare2 != "" {
 										k1, k2 = dtag.keyCompare1, dtag.keyCompare2
+										theValue = v
+									} else if dtag.format != "" {
+										theValue = fv
+										if vkey != "" {
+											k1 = vkey
+										} else {
+											k1 = ft.Name
+										}
+										k2 = dtag.format
 									}
-									reVal := val.Call([]reflect.Value{
-										v,
-										reflect.ValueOf(k1),
-										reflect.ValueOf(k2),
-										reflect.ValueOf(dtag.errorMessage),
-									})
 
-									if err := processOutput(reVal[0]); err != nil {
-										resultError = append(resultError, err)
+									if k1 != "" && k2 != "" {
+										reVal := val.Call([]reflect.Value{
+											theValue,
+											reflect.ValueOf(k1),
+											reflect.ValueOf(k2),
+											reflect.ValueOf(dtag.errorMessage),
+										})
+
+										if err := processOutput(reVal[0]); err != nil {
+											resultError = append(resultError, err)
+										}
 									}
+
 								} else if val.IsValid() && val.Type().String() == "func(interface {}, string, interface {}, string, string, string) error" {
-
 									k1, k2 := "", ""
 									if dtag.compareKey != "" && dtag.compareValue != "" {
 										k1, k2 = dtag.compareKey, dtag.compareValue
-									} else {
-										k1, k2 = dtag.keyCompare1, dtag.keyCompare2
 									}
 
-									var keyName string
-									if vkey != "" {
-										keyName = vkey
-									} else {
-										keyName = ft.Name
-									}
+									if k1 != "" && k2 != "" {
+										var keyName string
+										if vkey != "" {
+											keyName = vkey
+										} else {
+											keyName = ft.Name
+										}
 
-									reVal := val.Call([]reflect.Value{
-										v,
-										reflect.ValueOf(keyName),
-										fv,
-										reflect.ValueOf(k1),
-										reflect.ValueOf(k2),
-										reflect.ValueOf(dtag.errorMessage),
-									})
+										reVal := val.Call([]reflect.Value{
+											v,
+											reflect.ValueOf(keyName),
+											fv,
+											reflect.ValueOf(k1),
+											reflect.ValueOf(k2),
+											reflect.ValueOf(dtag.errorMessage),
+										})
 
-									if err := processOutput(reVal[0]); err != nil {
-										resultError = append(resultError, err)
+										if err := processOutput(reVal[0]); err != nil {
+											resultError = append(resultError, err)
+										}
 									}
 								}
 							}
@@ -196,7 +210,7 @@ func fetchDataTag(input string, idx int, dataTags []*dataTag) []*dataTag {
 				case "errorMessage":
 					itag.errorMessage = splits[1]
 				case "format":
-					itag.keyCompare2 = splits[1]
+					itag.format = splits[1]
 				case "keyCompare1":
 					itag.keyCompare1 = splits[1]
 				case "keyCompare2":
