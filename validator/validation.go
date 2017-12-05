@@ -25,7 +25,40 @@ func (v Validation) Required(value interface{}, key string, defaultError string)
 	}
 }
 
+func (v Validation) CondRequired(structValue interface{}, key string,  zeValue interface{}, keyCompare, valueCompare string, defaultError string) error {
+
+	val := reflect.ValueOf(structValue)
+	typ := val.Type()
+
+	if typ.Kind() != reflect.Struct {
+		return fmt.Errorf("Bad value, expected struct value, got ")
+	}
+
+	for i:=0; i < val.NumField(); i++ {
+		fv := val.Field(i)
+		ft := typ.Field(i)
+
+		vkey := ft.Tag.Get("vkey")
+		fmt.Printf("vkey:(%s), keyCompare:(%s),ft.Name:(%s)\n", vkey, keyCompare, ft.Name)
+		if (vkey != "" && vkey == keyCompare) || (vkey == "" && ft.Name == keyCompare) {
+			zVal := fmt.Sprintf("%v", reflect.Indirect(fv))
+			if zVal == valueCompare {
+				if IsEmpty(zeValue) {
+					if defaultError == "" {
+						return fmt.Errorf("%s is required", key)
+					} else {
+						return errors.New(defaultError)
+					}
+				}
+			}
+		}
+
+	}
+	return nil
+}
+
 func (v Validation) AfterDate(structValue interface{}, key1, key2 string, defaultError string) error {
+
 	val1, val2, err := v.after(structValue, key1, key2, defaultError)
 
 	if err != nil {
@@ -121,6 +154,13 @@ func (v Validation) Phone(value interface{}, key, defaultError string) error {
 		return nil
 	}
 	return v.Match(value, key, defaultError, v.PhoneFormat)
+}
+
+func (v Validation) Date(value interface{}, key, defaultError string) error {
+	if IsEmpty(value) {
+		return nil
+	}
+	return v.Match(value, key, defaultError, v.DateFormat)
 }
 
 func (v Validation) Match(value interface{}, key, defaultError, format string) error {

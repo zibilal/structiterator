@@ -68,17 +68,44 @@ func (s *ValidStruct) Valid(input interface{}) []error {
 										resultError = append(resultError, err)
 									}
 								} else if val.IsValid() && val.Type().String() == "func(interface {}, string, string, string) error" {
+									k1, k2 := "", ""
+									if dtag.compareKey != "" && dtag.compareValue != "" {
+										k1, k2 = dtag.compareKey, dtag.compareValue
+									} else {
+										k1, k2 = dtag.keyCompare1, dtag.keyCompare2
+									}
+									reVal := val.Call([]reflect.Value{
+										v,
+										reflect.ValueOf(k1),
+										reflect.ValueOf(k2),
+										reflect.ValueOf(dtag.errorMessage),
+									})
+
+									if err := processOutput(reVal[0]); err != nil {
+										resultError = append(resultError, err)
+									}
+								} else if val.IsValid() && val.Type().String() == "func(interface {}, string, interface {}, string, string, string) error" {
+
+									k1, k2 := "", ""
+									if dtag.compareKey != "" && dtag.compareValue != "" {
+										k1, k2 = dtag.compareKey, dtag.compareValue
+									} else {
+										k1, k2 = dtag.keyCompare1, dtag.keyCompare2
+									}
+
 									var keyName string
 									if vkey != "" {
 										keyName = vkey
 									} else {
 										keyName = ft.Name
 									}
+
 									reVal := val.Call([]reflect.Value{
-										fv,
+										v,
 										reflect.ValueOf(keyName),
-										reflect.ValueOf(dtag.keyCompare1),
-										reflect.ValueOf(dtag.keyCompare2),
+										fv,
+										reflect.ValueOf(k1),
+										reflect.ValueOf(k2),
 										reflect.ValueOf(dtag.errorMessage),
 									})
 
@@ -124,6 +151,8 @@ type dataTag struct {
 	format       string
 	keyCompare1  string
 	keyCompare2  string
+	compareKey   string
+	compareValue string
 }
 
 // fetchDataTag idx must always starts from -1
@@ -172,6 +201,10 @@ func fetchDataTag(input string, idx int, dataTags []*dataTag) []*dataTag {
 					itag.keyCompare1 = splits[1]
 				case "keyCompare2":
 					itag.keyCompare2 = splits[1]
+				case "compareValue":
+					itag.compareValue = splits[1]
+				case "compareKey":
+					itag.compareKey = splits[1]
 				}
 				fetchDataTag("", idx, dataTags)
 			}

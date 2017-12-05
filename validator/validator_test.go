@@ -20,7 +20,14 @@ type Application struct {
 	Id uint `vkey:"id" valid:"funcVal:Required"`
 	Name string `vkey:"application_name" valid:"funcVal:Required"`
 	AppliedTime string `vkey:"applied_time" valid:"funcVal:Required"`
-	ApprovedTime string `vkey:"approved_time" valid:"funcVal:Required;funcVal:After,keyCompare1:approved_time,keyCompare2:applied_time"`
+	ApprovedTime string `vkey:"approved_time" valid:"funcVal:Required;funcVal:AfterDate,keyCompare1:approved_time,keyCompare2:applied_time"`
+}
+
+type App2 struct {
+	Id uint `valid:"funcVal:Required"`
+	Name string `valid:"funcVal:Required"`
+	Status string
+	ApprovalReason string `valid:"funcVal:CondRequired,compareKey:Status,compareValue:approved"`
 }
 
 func TestNewValidStruct(t *testing.T) {
@@ -51,6 +58,33 @@ func TestNewValidStruct2(t *testing.T) {
 		validtr := NewValidStruct()
 		errors := validtr.Valid(person)
 		t.Log("Errors2", errors)
+	}
+}
+
+func TestNewValidStruct3(t *testing.T) {
+	t.Log("\nTesting for Application struct")
+	{
+		app := Application{}
+		app.Id = 1
+		app.AppliedTime = "09/20/2017"
+		app.ApprovedTime = "09/19/2017"
+		validtr := NewValidStruct()
+		errors := validtr.Valid(app)
+		t.Log("Errors3", errors)
+	}
+}
+
+func TestNewValidStruct4(t *testing.T) {
+	t.Log("\nTesting for App2 struct")
+	{
+		app := App2{}
+		app.Id = 2
+		app.Name = "Bilal Muhammad"
+		app.Status = "approved"
+
+		validtr := NewValidStruct()
+		errors := validtr.Valid(app)
+		t.Log("Errors4", errors)
 	}
 }
 
@@ -86,6 +120,18 @@ func TestDataTag(t *testing.T) {
 		dataTags3 := []*dataTag{}
 		dataTags3 = fetchDataTag(input3, -1, dataTags3)
 		for _, tag := range dataTags3 {
+			t.Logf("Tag %v\n", tag)
+		}
+
+		t.Log("ends")
+	}
+
+	t.Log("\nTesting data tag.Input for compareKey and compareValue\n")
+	{
+		input4 := "funcVal:CondRequired,compareKey:update_status,compareValue:1"
+		dataTag4 := []*dataTag{}
+		dataTag4 = fetchDataTag(input4, -1, dataTag4)
+		for _, tag := range dataTag4 {
 			t.Logf("Tag %v\n", tag)
 		}
 
