@@ -159,11 +159,28 @@ func (v Validation) Phone(value interface{}, key, defaultError string) error {
 	return v.Match(value, key, v.PhoneFormat, defaultError)
 }
 
-func (v Validation) Date(value interface{}, key, defaultError string) error {
+func (v Validation) Date(value interface{}, key, format, layout, defaultError string) error {
 	if IsEmpty(value) {
 		return nil
 	}
-	return v.Match(value, key, v.DateFormat, defaultError)
+
+	dateStr, found := value.(string)
+	if !found {
+		return fmt.Errorf("%s is expected of type string", key)
+	}
+
+	_, err := time.Parse(layout, dateStr)
+
+	if err != nil {
+		if defaultError == "" {
+			return fmt.Errorf("%s is expected of format %s", key, format)
+		} else {
+			return errors.New(defaultError)
+		}
+
+	} else {
+		return nil
+	}
 }
 
 func (v Validation) Match(value interface{}, key, format, defaultError string) error {

@@ -17,17 +17,17 @@ type Person struct {
 }
 
 type Application struct {
-	Id           uint   `vkey:"id" valid:"funcVal:Required"`
-	Name         string `vkey:"application_name" valid:"funcVal:Required"`
+	Id           uint   `json:"id" valid:"funcVal:Required"`
+	Name         string `json:"application_name" valid:"funcVal:Required"`
 	AppliedTime  string `valid:"funcVal:Required"`
 	ApprovedTime string `valid:"funcVal:Required;funcVal:AfterDate,keyCompare1:ApprovedTime,keyCompare2:AppliedTime"`
 }
 
 type ApplicationSecond struct {
-	Id           uint   `vkey:"id" valid:"funcVal:Required"`
-	Name         string `vkey:"application_name" valid:"funcVal:Required"`
-	AppliedTime  string `vkey:"applied_time" valid:"funcVal:Required"`
-	ApprovedTime string `vkey:"approved_time" valid:"funcVal:Required;funcVal:AfterDate,keyCompare1:approved_time,keyCompare2:applied_time"`
+	Id           uint   `json:"id" valid:"funcVal:Required"`
+	Name         string `json:"application_name" valid:"funcVal:Required"`
+	AppliedTime  string `json:"applied_time" valid:"funcVal:Required"`
+	ApprovedTime string `json:"approved_time" valid:"funcVal:Required;funcVal:AfterDate,keyCompare1:approved_time,keyCompare2:applied_time"`
 }
 
 type App2 struct {
@@ -41,6 +41,55 @@ type App3 struct {
 	Id          uint   `valid:"funcVal:Required"`
 	Name        string `valid:"funcVal:Required"`
 	PhoneNumber string `valid:"funcVal:Required;funcVal:Match,format:^(62|0)([0-9]*)$"`
+}
+
+type Appl struct {
+	Id uint `valid:"funcVal:Required"`
+	Name string `valid:"funcVal:Required"`
+	DateJoin string `valid:"funcVal:Required;funcVal:Date,format:mm/dd/yyyy,dateLayout:01/02/2006"`
+	DateTesting string `valid:"funcVal:Required;funcVal:Date,format:mm/dd/yyyy,dateLayout:01/02/2006,errorMessage:Wrong date format, pls check your format"`
+}
+
+func TestApplStruct(t *testing.T) {
+	t.Log("\nTesting Appl struct")
+	{
+		appl := Appl{}
+		validtr := NewValidStruct()
+		errors := validtr.Valid(appl)
+		t.Log("Errors", errors)
+	}
+
+	t.Log("\nTesting Appl struct")
+	{
+		appl := Appl{}
+		appl.Id = 123
+		appl.Name = "Test Appl Struct"
+		validtr := NewValidStruct()
+		errors := validtr.Valid(appl)
+		t.Log("Errors", errors)
+	}
+
+	t.Log("\nTesting Appl struct, wrong date format")
+	{
+		appl := Appl{}
+		appl.Id = 123
+		appl.Name = "Test Appl Struct"
+		appl.DateJoin = "29/11/2017"
+		validtr := NewValidStruct()
+		errors := validtr.Valid(appl)
+		t.Log("Errors", errors)
+	}
+
+	t.Log("\nTesting Appl struct, wrong date format")
+	{
+		appl := Appl{}
+		appl.Id = 123
+		appl.Name = "Test Appl Struct"
+		appl.DateTesting = "date 19/29/2017"
+		validtr := NewValidStruct()
+		errors := validtr.Valid(appl)
+		t.Log("Errors", errors)
+	}
 }
 
 func TestNewValidStruct(t *testing.T) {

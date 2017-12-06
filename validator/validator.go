@@ -18,6 +18,7 @@ func NewValidStruct() *ValidStruct {
 	v := Validation{}
 	v.PhoneFormat = `^([62]|[0])[0-9]$`
 	v.EmailFormat = `^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`
+	v.DateFormat = `01/02/2006`
 	return &ValidStruct{v}
 }
 
@@ -38,7 +39,12 @@ func (s *ValidStruct) Valid(input interface{}) []error {
 			} else {
 				// process tags
 				dtags := ft.Tag.Get("valid")
-				vkey := ft.Tag.Get("vkey")
+				jsplit := strings.Split(ft.Tag.Get("json"), ",")
+				vkey := ""
+				if len(jsplit) > 0 {
+					vkey = strings.TrimSpace(jsplit[0])
+				}
+
 				if dtags != "" {
 					dataTags := []*dataTag{}
 					dataTags = fetchDataTag(dtags, -1, dataTags)
@@ -126,6 +132,31 @@ func (s *ValidStruct) Valid(input interface{}) []error {
 											resultError = append(resultError, err)
 										}
 									}
+								} else if val.IsValid() && val.Type().String() == "func(interface {}, string, string, string, string) error" {
+									k1, k2 := "", ""
+									if dtag.format != "" && dtag.dateLayout != "" {
+										k1, k2 = dtag.format, dtag.dateLayout
+									}
+
+									if k1 != "" && k2 != "" {
+										var keyName string
+										if vkey != "" {
+											keyName = vkey
+										} else {
+											keyName = ft.Name
+										}
+
+										reVal := val.Call([]reflect.Value{
+											fv,
+											reflect.ValueOf(keyName),
+											reflect.ValueOf(k1),
+											reflect.ValueOf(k2),
+											reflect.ValueOf(dtag.errorMessage),
+										})
+										if err := processOutput(reVal[0]); err != nil {
+											resultError = append(resultError, err)
+										}
+									}
 								}
 							}
 
@@ -167,6 +198,7 @@ type dataTag struct {
 	keyCompare2  string
 	compareKey   string
 	compareValue string
+	dateLayout   string
 }
 
 // fetchDataTag idx must always starts from -1
@@ -219,6 +251,8 @@ func fetchDataTag(input string, idx int, dataTags []*dataTag) []*dataTag {
 					itag.compareValue = splits[1]
 				case "compareKey":
 					itag.compareKey = splits[1]
+				case "dateLayout":
+					itag.dateLayout = splits[1]
 				}
 				fetchDataTag("", idx, dataTags)
 			}
