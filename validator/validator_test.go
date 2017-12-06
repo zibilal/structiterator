@@ -34,7 +34,7 @@ type App2 struct {
 	Id             uint   `valid:"funcVal:Required"`
 	Name           string `valid:"funcVal:Required"`
 	Status         string
-	ApprovalReason string `valid:"funcVal:CondRequired,compareKey:Status,compareValue:approved"`
+	ApprovalReason string `valid:"funcVal:CondRequired,compareKey:Status,compareValue:approved|rejected"`
 }
 
 type App3 struct {
@@ -104,7 +104,7 @@ func TestNewValidStruct4(t *testing.T) {
 		app := App2{}
 		app.Id = 2
 		app.Name = "Bilal Muhammad"
-		app.Status = "approved"
+		app.Status = "rejected"
 
 		validtr := NewValidStruct()
 		errors := validtr.Valid(app)

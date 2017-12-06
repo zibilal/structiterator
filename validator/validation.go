@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"regexp"
 	"time"
+	"strings"
 )
 
 type Validation struct {
@@ -41,12 +42,15 @@ func (v Validation) CondRequired(structValue interface{}, key string,  zeValue i
 		vkey := ft.Tag.Get("vkey")
 		if (vkey != "" && vkey == keyCompare) || (vkey == "" && ft.Name == keyCompare) {
 			zVal := fmt.Sprintf("%v", reflect.Indirect(fv))
-			if zVal == valueCompare {
-				if IsEmpty(zeValue) {
-					if defaultError == "" {
-						return fmt.Errorf("%s is required", key)
-					} else {
-						return errors.New(defaultError)
+			split := strings.Split(valueCompare, "|")
+			for _, sp := range split {
+				if zVal == sp {
+					if IsEmpty(zeValue) {
+						if defaultError == "" {
+							return fmt.Errorf("%s is required", key)
+						} else {
+							return errors.New(defaultError)
+						}
 					}
 				}
 			}
