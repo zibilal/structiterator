@@ -11,15 +11,22 @@ func IsEmpty(val interface{}) bool {
 }
 
 type ValidStruct struct {
-	validation Validation
+	Validation
 }
 
 func NewValidStruct() *ValidStruct {
-	v := Validation{}
+	v := ValidStruct{}
 	v.PhoneFormat = `^([62]|[0])[0-9]$`
 	v.EmailFormat = `^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`
 	v.DateFormat = `01/02/2006`
-	return &ValidStruct{v}
+	v.ErrorMessageMap = make(map[string]string)
+	return &v
+}
+
+func NewValidStructWithMap(errorMap map[string]string) *ValidStruct {
+	v := NewValidStruct()
+	v.ErrorMessageMap = errorMap
+	return v
 }
 
 func (s *ValidStruct) Valid(input interface{}) []error {
@@ -50,8 +57,13 @@ func (s *ValidStruct) Valid(input interface{}) []error {
 					dataTags = fetchDataTag(dtags, -1, dataTags)
 
 					for _, dtag := range dataTags {
-
-						valOf := reflect.ValueOf(s.validation)
+						valOf := reflect.ValueOf(s)
+						if len(s.ErrorMessageMap) > 0 && dtag.errorMessage == "" {
+							tmp, found := s.ErrorMessageMap[dtag.funcVal]
+							if found {
+								dtag.errorMessage = tmp
+							}
+						}
 
 						if dtag.funcVal != "" {
 							val := valOf.MethodByName(dtag.funcVal)
@@ -82,6 +94,15 @@ func (s *ValidStruct) Valid(input interface{}) []error {
 									} else if dtag.keyCompare1 != "" && dtag.keyCompare2 != "" {
 										k1, k2 = dtag.keyCompare1, dtag.keyCompare2
 										theValue = v
+									} else if dtag.acceptedValues != "" {
+										theValue = fv
+										theValue = fv
+										if vkey != "" {
+											k1 = vkey
+										} else {
+											k1 = ft.Name
+										}
+										k2 = dtag.acceptedValues
 									} else if dtag.format != "" {
 										theValue = fv
 										if vkey != "" {
@@ -191,14 +212,15 @@ func processOutput(reVal reflect.Value) error {
 // funcval, errMessage, key1, key2
 
 type dataTag struct {
-	funcVal      string
-	errorMessage string
-	format       string
-	keyCompare1  string
-	keyCompare2  string
-	compareKey   string
-	compareValue string
-	dateLayout   string
+	funcVal        string
+	errorMessage   string
+	format         string
+	keyCompare1    string
+	keyCompare2    string
+	compareKey     string
+	compareValue   string
+	dateLayout     string
+	acceptedValues string
 }
 
 // fetchDataTag idx must always starts from -1
@@ -253,6 +275,8 @@ func fetchDataTag(input string, idx int, dataTags []*dataTag) []*dataTag {
 					itag.compareKey = splits[1]
 				case "dateLayout":
 					itag.dateLayout = splits[1]
+				case "values":
+					itag.acceptedValues = splits[1]
 				}
 				fetchDataTag("", idx, dataTags)
 			}

@@ -50,6 +50,38 @@ type Appl struct {
 	DateTesting string `valid:"funcVal:Required;funcVal:Date,format:mm/dd/yyyy,dateLayout:01/02/2006,errorMessage:Wrong date format, pls check your format"`
 }
 
+type Appll struct {
+	Id uint `valid:"funcVal:Required"`
+	Name string `valid:"funcVal:Required"`
+	RewardType string `valid:"funcVal:AcceptedValues,values:e-voucher|giftcard"`
+}
+
+func TestAppll(t *testing.T) {
+	t.Log("\nTesting Appll struct")
+	{
+		appll := Appll{}
+		appll.Name="Testing"
+		appll.RewardType = "The gifts"
+		validtr := NewValidStruct()
+		errors := validtr.Valid(appll)
+		t.Log("Errors", errors)
+	}
+}
+
+func TestValidationWithErrorMap(t *testing.T) {
+	t.Log("\nTesting Appll struct with error map")
+	{
+		appll := Appll{}
+		appll.Name="Testing"
+		appll.RewardType = "The gifts"
+		validtr := NewValidStructWithMap(map[string]string{
+			"Required": "Fields is required",
+		})
+		errors := validtr.Valid(appll)
+		t.Log("Errors", errors)
+	}
+}
+
 func TestApplStruct(t *testing.T) {
 	t.Log("\nTesting Appl struct")
 	{
