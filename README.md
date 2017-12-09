@@ -119,9 +119,3 @@ type User struct {
 	errors := validtr.Valid(user)
 ```
 Code above will result errors containe one error message Phone 
-
-4. funcVal: Date
-5. funcVal: Match
-6. funcVal: CondRequired
-7. funcVal: AfterDate
-8. funcVal: AcceptedValues
