@@ -31,6 +31,7 @@ app.Name = "First Test"
 app.Status = "rejected"
 errors := validtr.Valid(app)
 ```
+Each *funcVal* is separated by *;* (semicolon)
 
 The Valid function gives a list of errors according to validation logic not meet.
 ##Validation Function
@@ -285,3 +286,29 @@ type User struct {
 	errors := validtr.Valid(user)
 ```
 Code above will result *errors* contains two error message *15 is outside of range 16 - 25* and *wrong value ordinary, accepted values platinum|gold|silver|free*.
+
+## Customizing error message
+
+To customize error message, we can add *errorMessage* attribute inside struct definition;
+
+```
+type Appl struct {
+	Id uint `valid:"funcVal:Required,errorMessage:id is required, pls provide the id"`
+	DateTesting string `valid:"funcVal:Required;funcVal:Date,format:mm/dd/yyyy,dateLayout:01/02/2006,errorMessage:Wrong date format, pls check your format"`
+}
+```
+
+We can also create error message map, and inject this map when instantiate the ValidStruct object.
+```
+    appll := Appll{}
+	appll.Name="Testing"
+	appll.RewardType = "The gifts"
+	validtr := NewValidStructWithMap(map[string]string{
+		"Required": "Fields is required",
+	})
+```
+The map must have key the same with *funcVal* name, like the above example
+
+## Customizing field name with json tag
+
+If json tag is included in struct definition, it will treated as field name
