@@ -5,15 +5,16 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
-	"time"
-	"strings"
 	"strconv"
+	"strings"
+	"time"
 )
 
 type Validation struct {
-	PhoneFormat string
-	EmailFormat string
-	DateFormat  string
+	PhoneFormat     string
+	EmailFormat     string
+	DateLayout      string
+	DateFormat      string
 	ErrorMessageMap map[string]string
 }
 
@@ -28,20 +29,24 @@ func (v Validation) Required(value interface{}, key string, defaultError string)
 	}
 }
 
-func (v Validation) CondRequired(structValue interface{}, key string,  zeValue interface{}, keyCompare, valueCompare string, defaultError string) error {
+func (v Validation) CondRequired(structValue interface{}, key string, zeValue interface{}, keyCompare, valueCompare string, defaultError string) error {
 
 	val := reflect.ValueOf(structValue)
 	typ := val.Type()
 
 	if typ.Kind() != reflect.Struct {
-		return fmt.Errorf("Bad value, expected struct value, got ")
+		return fmt.Errorf("bad value, expected struct value, got ")
 	}
 
-	for i:=0; i < val.NumField(); i++ {
+	if keyCompare == "" && valueCompare == "" {
+		return errors.New("bad state, keyCompare and valueCompare is expected to have a string value")
+	}
+
+	for i := 0; i < val.NumField(); i++ {
 		fv := val.Field(i)
 		ft := typ.Field(i)
 
-		vkey := ft.Tag.Get("vkey")
+		vkey := ft.Tag.Get("json")
 		if (vkey != "" && vkey == keyCompare) || (vkey == "" && ft.Name == keyCompare) {
 			zVal := fmt.Sprintf("%v", reflect.Indirect(fv))
 			split := strings.Split(valueCompare, "|")
@@ -72,23 +77,23 @@ func (v Validation) AfterDate(structValue interface{}, key1, key2 string, defaul
 
 	ival1, found := val1.Interface().(string)
 	if !found {
-		return fmt.Errorf("Expected type string got %s", val1.Type())
+		return fmt.Errorf("expected type string got %s", val1.Type())
+	}
+
+	if ival1 == "" {
+		return nil
 	}
 
 	ival2, found := val2.Interface().(string)
 	if !found {
-		return fmt.Errorf("Expected type string got %s", val2.Type())
-	}
-
-	if ival1 == "" || ival2 == "" {
-		return fmt.Errorf("Expected both values not empty")
+		return fmt.Errorf("expected type string got %s", val2.Type())
 	}
 
 	var dateLayout string
-	if v.DateFormat == "" {
+	if v.DateLayout == "" {
 		dateLayout = "01/02/2006"
 	} else {
-		dateLayout = v.DateFormat
+		dateLayout = v.DateLayout
 	}
 
 	time1, err := time.Parse(dateLayout, ival1)
@@ -103,7 +108,7 @@ func (v Validation) AfterDate(structValue interface{}, key1, key2 string, defaul
 
 	if !time1.After(time2) {
 		if defaultError == "" {
-			return fmt.Errorf("Invalid %s should be after %s", key1, key2)
+			return fmt.Errorf("invalid %s should be after %s", key1, key2)
 		}
 
 		return errors.New(defaultError)
@@ -118,7 +123,7 @@ func (v Validation) after(structValue interface{}, key1, key2 string, defaultErr
 	typ := val.Type()
 
 	if typ.Kind() != reflect.Struct {
-		return reflect.Value{}, reflect.Value{}, fmt.Errorf("Bad value, expected struct value, got ")
+		return reflect.Value{}, reflect.Value{}, fmt.Errorf("bad value, expected struct value, got ")
 	}
 
 	var keyVal1 reflect.Value
@@ -127,7 +132,7 @@ func (v Validation) after(structValue interface{}, key1, key2 string, defaultErr
 	for i := 0; i < val.NumField(); i++ {
 		fv := val.Field(i)
 		ft := typ.Field(i)
-		vkey := ft.Tag.Get("vkey")
+		vkey := ft.Tag.Get("json")
 
 		if key1 == ft.Name || key1 == vkey {
 			keyVal1 = fv
@@ -136,12 +141,12 @@ func (v Validation) after(structValue interface{}, key1, key2 string, defaultErr
 		}
 	}
 
-	if !keyVal1.IsValid() || !keyVal2.IsValid() {
-		return reflect.Value{}, reflect.Value{}, errors.New("Unable comparing values, both value need to be provided")
+	if !keyVal2.IsValid() {
+		return reflect.Value{}, reflect.Value{}, errors.New("unable comparing values, both value need to be provided")
 	}
 
 	if keyVal1.Type() != keyVal2.Type() {
-		return reflect.Value{}, reflect.Value{}, errors.New("Unable comparing values, both value should have the same type")
+		return reflect.Value{}, reflect.Value{}, errors.New("unable comparing values, both value should have the same type")
 	}
 
 	return keyVal1, keyVal2, nil
@@ -191,7 +196,10 @@ func (v Validation) Match(value interface{}, key, format, defaultError string) e
 		return nil
 	}
 
-	re := regexp.MustCompile(format)
+	re, err := regexp.Compile(format)
+	if err != nil {
+		return fmt.Errorf("invalid regular expression %s: %s", format, err.Error())
+	}
 	svalue, found := value.(string)
 
 	if !found {
@@ -318,7 +326,7 @@ func checkInRange(val interface{}, val1, val2 string, errorMessage string) error
 		if err != nil {
 			return err
 		}
-		if !(ival >= int(ival1) && ival <= int(ival2) ) {
+		if !(ival >= int(ival1) && ival <= int(ival2)) {
 			if errorMessage == "" {
 				return fmt.Errorf("%d is outside of range %d - %d", ival, ival1, ival2)
 			} else {
@@ -335,7 +343,7 @@ func checkInRange(val interface{}, val1, val2 string, errorMessage string) error
 		if err != nil {
 			return err
 		}
-		if !(ival >= ival1 && ival <= ival2 ) {
+		if !(ival >= ival1 && ival <= ival2) {
 			if errorMessage == "" {
 				return fmt.Errorf("%d is outside of range %d - %d", ival, ival1, ival2)
 			} else {
@@ -352,7 +360,7 @@ func checkInRange(val interface{}, val1, val2 string, errorMessage string) error
 		if err != nil {
 			return err
 		}
-		if !(ival >= uint(ival1) && ival <= uint(ival2) ) {
+		if !(ival >= uint(ival1) && ival <= uint(ival2)) {
 			if errorMessage == "" {
 				return fmt.Errorf("%d is outside of range %d - %d", ival, ival1, ival2)
 			} else {
@@ -369,7 +377,7 @@ func checkInRange(val interface{}, val1, val2 string, errorMessage string) error
 		if err != nil {
 			return err
 		}
-		if !(ival >= ival1 && ival <= ival2 ) {
+		if !(ival >= ival1 && ival <= ival2) {
 			if errorMessage == "" {
 				return fmt.Errorf("%d is outside of range %d - %d", ival, ival1, ival2)
 			} else {
@@ -382,5 +390,3 @@ func checkInRange(val interface{}, val1, val2 string, errorMessage string) error
 
 	return nil
 }
-
-

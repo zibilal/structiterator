@@ -45,7 +45,7 @@ func TestValidation_AfterDate(t *testing.T) {
 	validtn := Validation{
 		PhoneFormat: `^(62|0)([0-9]*)$`,
 		EmailFormat: `^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`,
-		DateFormat:  "02/01/2006",
+		DateLayout:  "02/01/2006",
 	}
 
 	t.Log("\nTesting validation after date:")

@@ -19,15 +19,15 @@ type Person struct {
 type Application struct {
 	Id           uint   `json:"id" valid:"funcVal:Required"`
 	Name         string `json:"application_name" valid:"funcVal:Required"`
-	AppliedTime  string `valid:"funcVal:Required"`
-	ApprovedTime string `valid:"funcVal:Required;funcVal:AfterDate,keyCompare1:ApprovedTime,keyCompare2:AppliedTime"`
+	AppliedTime  string `json:"applied_time" valid:"funcVal:Required"`
+	ApprovedTime string `valid:"funcVal:Required;funcVal:AfterDate,compareKey:AppliedTime"`
 }
 
 type ApplicationSecond struct {
 	Id           uint   `json:"id" valid:"funcVal:Required"`
 	Name         string `json:"application_name" valid:"funcVal:Required"`
 	AppliedTime  string `json:"applied_time" valid:"funcVal:Required"`
-	ApprovedTime string `json:"approved_time" valid:"funcVal:Required;funcVal:AfterDate,keyCompare1:approved_time,keyCompare2:applied_time"`
+	ApprovedTime string `json:"approved_time" valid:"funcVal:Required;funcVal:AfterDate,compareKey:applied_time"`
 }
 
 type App2 struct {
@@ -160,8 +160,8 @@ func TestNewValidStruct3(t *testing.T) {
 	{
 		app := Application{}
 		app.Id = 1
+		app.Name = "AppName"
 		app.AppliedTime = "09/20/2017"
-		app.ApprovedTime = "09/19/2017"
 		validtr := NewValidStruct()
 		errors := validtr.Valid(app)
 		t.Log("Errors3", errors)

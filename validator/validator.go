@@ -16,9 +16,10 @@ type ValidStruct struct {
 
 func NewValidStruct() *ValidStruct {
 	v := ValidStruct{}
-	v.PhoneFormat = `^([62]|[0])[0-9]$`
+	v.PhoneFormat = `^([62]|[0])[0-9]+$`
 	v.EmailFormat = `^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`
-	v.DateFormat = `01/02/2006`
+	v.DateLayout = `01/02/2006`
+	v.DateFormat = `mm/dd/yyyy`
 	v.ErrorMessageMap = make(map[string]string)
 	return &v
 }
@@ -91,11 +92,16 @@ func (s *ValidStruct) Valid(input interface{}) []error {
 									if dtag.compareKey != "" && dtag.compareValue != "" {
 										k1, k2 = dtag.compareKey, dtag.compareValue
 										theValue = v
-									} else if dtag.keyCompare1 != "" && dtag.keyCompare2 != "" {
-										k1, k2 = dtag.keyCompare1, dtag.keyCompare2
+									} else if dtag.compareKey != "" && dtag.compareValue == "" {
+										var keyName string
+										if vkey != "" {
+											keyName = vkey
+										} else {
+											keyName = ft.Name
+										}
+										k1, k2 = keyName, dtag.compareKey
 										theValue = v
 									} else if dtag.acceptedValues != "" {
-										theValue = fv
 										theValue = fv
 										if vkey != "" {
 											k1 = vkey
@@ -157,6 +163,8 @@ func (s *ValidStruct) Valid(input interface{}) []error {
 									k1, k2 := "", ""
 									if dtag.format != "" && dtag.dateLayout != "" {
 										k1, k2 = dtag.format, dtag.dateLayout
+									} else {
+										k1, k2 = s.DateFormat, s.DateLayout
 									}
 
 									if k1 != "" && k2 != "" {
@@ -194,7 +202,7 @@ func (s *ValidStruct) Valid(input interface{}) []error {
 		}
 
 	default:
-		return []error{errors.New("Valid only accept input type struct")}
+		return []error{errors.New("valid only accept input type struct")}
 	}
 }
 
@@ -215,8 +223,6 @@ type dataTag struct {
 	funcVal        string
 	errorMessage   string
 	format         string
-	keyCompare1    string
-	keyCompare2    string
 	compareKey     string
 	compareValue   string
 	dateLayout     string
@@ -265,10 +271,6 @@ func fetchDataTag(input string, idx int, dataTags []*dataTag) []*dataTag {
 					itag.errorMessage = splits[1]
 				case "format":
 					itag.format = splits[1]
-				case "keyCompare1":
-					itag.keyCompare1 = splits[1]
-				case "keyCompare2":
-					itag.keyCompare2 = splits[1]
 				case "compareValue":
 					itag.compareValue = splits[1]
 				case "compareKey":
