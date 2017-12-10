@@ -37,7 +37,7 @@ The Valid function gives a list of errors according to validation logic not meet
 ##Validation Function
 Validator currently consists of the following validation logic. This validation logic is named ```funcVal```
 
-###funcVal: Required
+### funcVal: Required
 
 funcVal: Required will force the object field to be filled with a value. If the field is empty, ```Valid```
 function will generate and error.
