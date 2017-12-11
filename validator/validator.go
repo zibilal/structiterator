@@ -7,7 +7,18 @@ import (
 )
 
 func IsEmpty(val interface{}) bool {
-	return val == nil || reflect.DeepEqual(val, reflect.Zero(reflect.TypeOf(val)).Interface())
+	empty := val == nil || reflect.DeepEqual(val, reflect.Zero(reflect.TypeOf(val)).Interface())
+
+	if !empty {
+		// check again for empty string
+		if reflect.ValueOf(val).Kind() == reflect.String {
+			if strings.TrimSpace(val.(string)) == "" {
+				empty = true
+			}
+		}
+	}
+
+	return empty
 }
 
 type ValidStruct struct {
