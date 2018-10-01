@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"net/url"
 )
 
 type Validation struct {
@@ -157,6 +158,27 @@ func (v Validation) Email(value interface{}, key, defaultError string) error {
 		return nil
 	}
 	return v.Match(value, key, v.EmailFormat, defaultError)
+}
+
+func (v Validation) Url(value interface{}, key, defaultError string) error {
+	if IsEmpty(value) {
+		return nil
+	}
+
+	str, ok := value.(string)
+
+	if ok {
+		_, err := url.ParseRequestURI(str)
+
+		if err != nil {
+			if defaultError == "" {
+				defaultError = err.Error()
+			}
+			return errors.New(defaultError)
+		}
+	}
+
+	return nil
 }
 
 func (v Validation) Phone(value interface{}, key, defaultError string) error {

@@ -122,3 +122,55 @@ func TestDate(t *testing.T) {
 		t.Log(tim2)
 	}
 }
+
+func TestUrl(t *testing.T) {
+	t.Log("\nTesting parsing url:")
+	{
+		url1 := "abcdszzz"
+		url2 := "http://exampl.com"
+		url3 := "http://images.example.com/static/images/foo.jpg"
+
+		validtn := Validation{}
+		err := validtn.Url(url1, "url_satu", "url1 problem")
+
+		if err != nil {
+			t.Logf("%s expected error not nil, got %s", success, err.Error())
+		} else {
+			t.Fatalf("%s expected error not nil", failed)
+		}
+
+		err = validtn.Url(url2, "url_dua", "url2 problem")
+		if err != nil {
+			t.Fatalf("%s expected error nil, got %s", failed, err.Error())
+		} else {
+			t.Logf("%s expected error nil", success)
+
+		}
+
+		err = validtn.Url(url3, "url_tiga", "url3 problem")
+		if err != nil {
+			t.Fatalf("%s expected error nil, got %s", failed, err.Error())
+		} else {
+			t.Logf("%s expected error nil", success)
+
+		}
+
+		url4 := "http://www.google.com/test.png"
+		err = validtn.Url(url4, "url_tiga", "")
+		if err != nil {
+			t.Fatalf("%s expected error nil, got %s", failed, err.Error())
+		} else {
+			t.Logf("%s expected error nil", success)
+
+		}
+
+		url5 := "http://192.168.0.22/test.jpeg"
+		err = validtn.Url(url5, "url_tiga", "url3 problem")
+		if err != nil {
+			t.Fatalf("%s expected error nil, got %s", failed, err.Error())
+		} else {
+			t.Logf("%s expected error nil", success)
+
+		}
+	}
+}

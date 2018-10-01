@@ -20,7 +20,7 @@ type Application struct {
 	Id           uint   `json:"id" valid:"funcVal:Required"`
 	Name         string `json:"application_name" valid:"funcVal:Required"`
 	AppliedTime  string `json:"applied_time" valid:"funcVal:Required"`
-	ApprovedTime string `valid:"funcVal:Required;funcVal:AfterDate,compareKey:AppliedTime"`
+	ApprovedTime string `json:"approved_time" valid:"funcVal:Required;funcVal:AfterDate,compareKey:AppliedTime"`
 }
 
 type ApplicationSecond struct {
