@@ -49,15 +49,15 @@ func NewValidStructWithMap(mapper *ValidationMapper, errorMap map[string]string)
 }
 
 func (s *ValidStruct) setupDefaultMapper() error {
-	ival := reflect.ValueOf(Validation{})
+	vc := Validation{}
+	ival := reflect.ValueOf(vc)
+	ityp := reflect.TypeOf(vc)
 	for i := 0; i < ival.NumMethod(); i++ {
 		method := ival.Method(i)
-		mtype := method.Type()
-		if err := s.mapper.AddFunc(mtype.Name(), method.Interface()); err != nil {
+		if err := s.mapper.AddFunc(ityp.Method(i).Name, method.Interface()); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 
