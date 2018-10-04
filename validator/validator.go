@@ -22,23 +22,47 @@ func IsEmpty(val interface{}) bool {
 }
 
 type ValidStruct struct {
-	Validation
+	mapper          *ValidationMapper
+	PhoneFormat     string
+	EmailFormat     string
+	DateLayout      string
+	DateFormat      string
+	ErrorMessageMap map[string]string
 }
 
-func NewValidStruct() *ValidStruct {
+func NewValidStruct(mapper *ValidationMapper) *ValidStruct {
 	v := ValidStruct{}
-	v.PhoneFormat = `^([62]|[0])[0-9]+$`
-	v.EmailFormat = `^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`
-	v.DateLayout = `01/02/2006`
-	v.DateFormat = `mm/dd/yyyy`
+	v.PhoneFormat = PhoneFormat
+	v.EmailFormat = EmailFormat
+	v.DateLayout = DateLayout
+	v.DateFormat = DateFormat
 	v.ErrorMessageMap = make(map[string]string)
+	v.mapper = mapper
+	v.setupDefaultMapper()
 	return &v
 }
 
-func NewValidStructWithMap(errorMap map[string]string) *ValidStruct {
-	v := NewValidStruct()
+func NewValidStructWithMap(mapper *ValidationMapper, errorMap map[string]string) *ValidStruct {
+	v := NewValidStruct(mapper)
 	v.ErrorMessageMap = errorMap
 	return v
+}
+
+func (s *ValidStruct) setupDefaultMapper() error {
+	ival := reflect.ValueOf(Validation{})
+	for i := 0; i < ival.NumMethod(); i++ {
+		method := ival.Method(i)
+		mtype := method.Type()
+		if err := s.mapper.AddFunc(mtype.Name(), method.Interface()); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *ValidStruct) RegisterValidator(name string, f interface{}) error {
+	return s.mapper.AddFunc(name, f)
 }
 
 func (s *ValidStruct) Valid(input interface{}) []error {
@@ -69,7 +93,6 @@ func (s *ValidStruct) Valid(input interface{}) []error {
 					dataTags = fetchDataTag(dtags, -1, dataTags)
 
 					for _, dtag := range dataTags {
-						valOf := reflect.ValueOf(s)
 						if len(s.ErrorMessageMap) > 0 && dtag.errorMessage == "" {
 							tmp, found := s.ErrorMessageMap[dtag.funcVal]
 							if found {
@@ -78,7 +101,12 @@ func (s *ValidStruct) Valid(input interface{}) []error {
 						}
 
 						if dtag.funcVal != "" {
-							val := valOf.MethodByName(dtag.funcVal)
+							ival, err := s.mapper.GetFunc(dtag.funcVal)
+							if err != nil {
+								resultError = append(resultError)
+								return resultError
+							}
+							val := reflect.ValueOf(ival)
 							if val != (reflect.Value{}) {
 								if val.IsValid() && val.Type().String() == "func(interface {}, string, string) error" {
 									var keyName string

@@ -11,10 +11,7 @@ const (
 )
 
 func TestValidation_Email(t *testing.T) {
-	validation := Validation{
-		PhoneFormat: `^(62|0)([0-9]*)$`,
-		EmailFormat: `^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`,
-	}
+	validation := Validation{}
 
 	t.Log("\nTesting Validation Email:")
 	{
@@ -42,11 +39,7 @@ func TestValidation_Email(t *testing.T) {
 }
 
 func TestValidation_AfterDate(t *testing.T) {
-	validtn := Validation{
-		PhoneFormat: `^(62|0)([0-9]*)$`,
-		EmailFormat: `^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`,
-		DateLayout:  "02/01/2006",
-	}
+	validtn := Validation{}
 
 	t.Log("\nTesting validation after date:")
 	{

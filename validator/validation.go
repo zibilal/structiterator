@@ -3,20 +3,83 @@ package validator
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
-	"net/url"
+)
+
+type ValidationMapper struct {
+	funcMap            map[string]interface{}
+	acceptedSignatures []string
+	sync.Mutex
+}
+
+func NewValidationMapper() *ValidationMapper {
+	vMapper := new(ValidationMapper)
+	vMapper.funcMap = make(map[string]interface{})
+	vMapper.acceptedSignatures = []string{
+		"func(interface {}, string, string) error",
+		"func(interface {}, string, string, string) error",
+		"func(interface {}, string, interface {}, string, string, string) error",
+		"func(interface {}, string, string, string, string) error",
+	}
+
+	return vMapper
+}
+
+func (v *ValidationMapper) AddFunc(name string, f interface{}) error {
+	fValue := reflect.ValueOf(f)
+	if fValue.Kind() != reflect.Func {
+		return errors.New("please provide a function typed argument")
+	}
+
+	notFound := true
+	for _, s := range v.acceptedSignatures {
+		if fValue.Type().String() == s {
+			notFound = false
+			break
+		}
+	}
+
+	if notFound {
+		return errors.New("function accepted is not accepted")
+	}
+
+	v.Lock()
+	v.funcMap[name] = f
+	v.Unlock()
+
+	return nil
+}
+
+func (v *ValidationMapper) GetFunc(name string) (interface{}, error) {
+	var (
+		result interface{}
+		found  bool
+	)
+	v.Lock()
+	result, found = v.funcMap[name]
+	v.Unlock()
+
+	if found {
+		return result, nil
+	} else {
+		return nil, fmt.Errorf("func name %s is not found", name)
+	}
+}
+
+const (
+	PhoneFormat = `^([62]|[0])[0-9]+$`
+	EmailFormat = `^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`
+	DateLayout  = `01/02/2006`
+	DateFormat  = `mm/dd/yyyy`
 )
 
 type Validation struct {
-	PhoneFormat     string
-	EmailFormat     string
-	DateLayout      string
-	DateFormat      string
-	ErrorMessageMap map[string]string
 }
 
 func (v Validation) Required(value interface{}, key string, defaultError string) error {
@@ -90,12 +153,7 @@ func (v Validation) AfterDate(structValue interface{}, key1, key2 string, defaul
 		return fmt.Errorf("expected type string got %s", val2.Type())
 	}
 
-	var dateLayout string
-	if v.DateLayout == "" {
-		dateLayout = "01/02/2006"
-	} else {
-		dateLayout = v.DateLayout
-	}
+	var dateLayout = DateLayout
 
 	time1, err := time.Parse(dateLayout, ival1)
 	if err != nil {
@@ -157,7 +215,7 @@ func (v Validation) Email(value interface{}, key, defaultError string) error {
 	if IsEmpty(value) {
 		return nil
 	}
-	return v.Match(value, key, v.EmailFormat, defaultError)
+	return v.Match(value, key, EmailFormat, defaultError)
 }
 
 func (v Validation) Url(value interface{}, key, defaultError string) error {
@@ -185,7 +243,7 @@ func (v Validation) Phone(value interface{}, key, defaultError string) error {
 	if IsEmpty(value) {
 		return nil
 	}
-	return v.Match(value, key, v.PhoneFormat, defaultError)
+	return v.Match(value, key, PhoneFormat, defaultError)
 }
 
 func (v Validation) Date(value interface{}, key, format, layout, defaultError string) error {

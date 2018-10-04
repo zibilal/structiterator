@@ -44,15 +44,15 @@ type App3 struct {
 }
 
 type Appl struct {
-	Id uint `valid:"funcVal:Required"`
-	Name string `valid:"funcVal:Required"`
-	DateJoin string `valid:"funcVal:Required;funcVal:Date,format:mm/dd/yyyy,dateLayout:01/02/2006"`
+	Id          uint   `valid:"funcVal:Required"`
+	Name        string `valid:"funcVal:Required"`
+	DateJoin    string `valid:"funcVal:Required;funcVal:Date,format:mm/dd/yyyy,dateLayout:01/02/2006"`
 	DateTesting string `valid:"funcVal:Required;funcVal:Date,format:mm/dd/yyyy,dateLayout:01/02/2006,errorMessage:Wrong date format, pls check your format"`
 }
 
 type Appll struct {
-	Id uint `valid:"funcVal:Required"`
-	Name string `valid:"funcVal:Required"`
+	Id         uint   `valid:"funcVal:Required"`
+	Name       string `valid:"funcVal:Required"`
 	RewardType string `valid:"funcVal:AcceptedValues,values:e-voucher|giftcard"`
 }
 
@@ -60,9 +60,10 @@ func TestAppll(t *testing.T) {
 	t.Log("\nTesting Appll struct")
 	{
 		appll := Appll{}
-		appll.Name="Testing"
+		appll.Name = "Testing"
 		appll.RewardType = "The gifts"
-		validtr := NewValidStruct()
+		mapper := NewValidationMapper()
+		validtr := NewValidStruct(mapper)
 		errors := validtr.Valid(appll)
 		t.Log("Errors", errors)
 	}
@@ -72,9 +73,11 @@ func TestValidationWithErrorMap(t *testing.T) {
 	t.Log("\nTesting Appll struct with error map")
 	{
 		appll := Appll{}
-		appll.Name="Testing"
+		appll.Name = "Testing"
 		appll.RewardType = "The gifts"
-		validtr := NewValidStructWithMap(map[string]string{
+
+		mapper := NewValidationMapper()
+		validtr := NewValidStructWithMap(mapper, map[string]string{
 			"Required": "Fields is required",
 		})
 		errors := validtr.Valid(appll)
@@ -83,10 +86,11 @@ func TestValidationWithErrorMap(t *testing.T) {
 }
 
 func TestApplStruct(t *testing.T) {
+	mapper := NewValidationMapper()
 	t.Log("\nTesting Appl struct")
 	{
 		appl := Appl{}
-		validtr := NewValidStruct()
+		validtr := NewValidStruct(mapper)
 		errors := validtr.Valid(appl)
 		t.Log("Errors", errors)
 	}
@@ -96,7 +100,7 @@ func TestApplStruct(t *testing.T) {
 		appl := Appl{}
 		appl.Id = 123
 		appl.Name = "Test Appl Struct"
-		validtr := NewValidStruct()
+		validtr := NewValidStruct(mapper)
 		errors := validtr.Valid(appl)
 		t.Log("Errors", errors)
 	}
@@ -107,7 +111,7 @@ func TestApplStruct(t *testing.T) {
 		appl.Id = 123
 		appl.Name = "Test Appl Struct"
 		appl.DateJoin = "29/11/2017"
-		validtr := NewValidStruct()
+		validtr := NewValidStruct(mapper)
 		errors := validtr.Valid(appl)
 		t.Log("Errors", errors)
 	}
@@ -118,7 +122,7 @@ func TestApplStruct(t *testing.T) {
 		appl.Id = 123
 		appl.Name = "Test Appl Struct"
 		appl.DateTesting = "date 19/29/2017"
-		validtr := NewValidStruct()
+		validtr := NewValidStruct(mapper)
 		errors := validtr.Valid(appl)
 		t.Log("Errors", errors)
 	}
@@ -128,17 +132,19 @@ func TestNewValidStruct(t *testing.T) {
 	t.Log("\nTesting Using StructIterator:")
 	{
 		user := User{}
-		validtr := NewValidStruct()
+		mapper := NewValidationMapper()
+		validtr := NewValidStruct(mapper)
 		errors := validtr.Valid(user)
 		t.Log("Errors", errors)
 	}
 }
 
 func TestNewValidStruct2(t *testing.T) {
+	mapper := NewValidationMapper()
 	t.Log("\nTesting Using ValidStruc, with empty struct:")
 	{
 		person := Person{}
-		validtr := NewValidStruct()
+		validtr := NewValidStruct(mapper)
 		errors := validtr.Valid(person)
 		t.Log("Errors", errors)
 	}
@@ -149,20 +155,21 @@ func TestNewValidStruct2(t *testing.T) {
 			Name:  "Bilal Muhammad",
 			Email: "Bilal Muhammad",
 		}
-		validtr := NewValidStruct()
+		validtr := NewValidStruct(mapper)
 		errors := validtr.Valid(person)
 		t.Log("Errors2", errors)
 	}
 }
 
 func TestNewValidStruct3(t *testing.T) {
+	mapper := NewValidationMapper()
 	t.Log("\nTesting for Application struct")
 	{
 		app := Application{}
 		app.Id = 1
 		app.Name = "AppName"
 		app.AppliedTime = "09/20/2017"
-		validtr := NewValidStruct()
+		validtr := NewValidStruct(mapper)
 		errors := validtr.Valid(app)
 		t.Log("Errors3", errors)
 	}
@@ -173,13 +180,14 @@ func TestNewValidStruct3(t *testing.T) {
 		app.Id = 1
 		app.AppliedTime = "09/20/2017"
 		app.ApprovedTime = "09/19/2017"
-		validtr := NewValidStruct()
+		validtr := NewValidStruct(mapper)
 		errors := validtr.Valid(app)
 		t.Log("Errors3", errors)
 	}
 }
 
 func TestNewValidStruct4(t *testing.T) {
+	mapper := NewValidationMapper()
 	t.Log("\nTesting for App2 struct")
 	{
 		app := App2{}
@@ -187,7 +195,7 @@ func TestNewValidStruct4(t *testing.T) {
 		app.Name = "Bilal Muhammad"
 		app.Status = "rejected"
 
-		validtr := NewValidStruct()
+		validtr := NewValidStruct(mapper)
 		errors := validtr.Valid(app)
 		t.Log("Errors4", errors)
 	}
@@ -198,7 +206,7 @@ func TestNewValidStruct4(t *testing.T) {
 		app.Name = "Bilal Muhammad"
 		app.PhoneNumber = "+6281817800"
 
-		validtr := NewValidStruct()
+		validtr := NewValidStruct(mapper)
 		errors := validtr.Valid(app)
 		t.Log("Errors5", errors)
 	}
