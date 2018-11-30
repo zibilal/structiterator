@@ -153,7 +153,7 @@ func TestNewValidStruct2(t *testing.T) {
 	{
 		person := Person{
 			Name:  "Bilal Muhammad",
-			Email: "Bilal Muhammad",
+			Email: "Bilal.muhammad@exampl.com",
 		}
 		validtr := NewValidStruct(mapper)
 		errors := validtr.Valid(person)

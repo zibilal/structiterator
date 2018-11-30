@@ -74,7 +74,7 @@ func (v *ValidationMapper) GetFunc(name string) (interface{}, error) {
 
 const (
 	PhoneFormat = `^([62]|[0])[0-9]+$`
-	EmailFormat = `^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`
+	EmailFormat = `^[A-Za-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`
 	DateLayout  = `01/02/2006`
 	DateFormat  = `mm/dd/yyyy`
 )
